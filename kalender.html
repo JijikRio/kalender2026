@@ -1,0 +1,403 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Pembuat Kalender Kustom A3 2026 Indonesia</title>
+    <!-- Tailwind -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #f7f7f7;
+            color: #1f2937;
+        }
+
+        /* Tampilan web (default) */
+        .calendar-grid-web {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 24px;
+        }
+
+        /* Grid 4x3 (mode 12-in-1) */
+        .calendar-grid-4x3 {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 12px;
+            width: 100%;
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        .month-card {
+            background-color: #ffffff;
+            border-radius: 12px;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -2px rgba(0, 0, 0, 0.1);
+            overflow: hidden;
+            position: relative;
+            min-height: 280px;
+        }
+
+        .day-cell {
+            padding: 4px 1px;
+            height: 52px;
+            display: flex;
+            flex-direction: column;
+            justify-content: flex-start;
+            align-items: center;
+            text-align: center;
+            font-weight: 700;
+            border-radius: 4px;
+            transition: background-color 0.2s;
+        }
+        .day-cell span.date-number {
+            font-size: 0.9rem;
+            line-height: 1;
+        }
+        .day-detail {
+            font-size: 0.55rem;
+            line-height: 1;
+        }
+
+        .sat-day { color: #10b981; }
+        .sun-day, .holiday-day {
+            color: #ef4444;
+            background-color: #fef2f2;
+        }
+        .cuti-bersama-day {
+            color: #f59e0b;
+            background-color: #fffbeb;
+        }
+        .day-label {
+            font-size: 0.75rem;
+            font-weight: 700;
+            text-align: center;
+            color: #6b7280;
+            padding: 4px 0;
+        }
+        .header-bg {
+            background: linear-gradient(135deg, #1d4ed8 0%, #3b82f6 100%);
+        }
+
+        /* Preview gambar di web */
+        #globalImagePreview {
+            height: 300px;
+        }
+
+        /* ================== MODE PRINT (A3) ================== */
+      @media print {
+    * {
+        -webkit-print-color-adjust: exact !important;
+        print-color-adjust: exact !important;
+    }
+
+    @page {
+        size: A3 portrait;
+        margin: 0; /* NO MARGIN biar penuh */
+    }
+
+    body {
+        margin: 0 !important;
+        padding: 0 !important;
+    }
+
+    /* Sembunyikan header & legend */
+    .no-print,
+    .legend-section {
+        display: none !important;
+    }
+
+    .max-w-7xl {
+        max-width: none !important;
+        width: 100% !important;
+    }
+
+    .print-container {
+        display: flex;
+        flex-direction: column;
+        width: 100%;
+        height: 100%;
+    }
+
+    /* Gambar tahun - FULL width & crop rapih */
+  /* FOTO TAHUN – pakai rasio asli, tanpa crop */
+#globalImagePreview {
+    width: 100%;
+    height: auto;             /* tidak dipaksa tingginya */
+    margin: 0 !important;
+    padding: 0 !important;
+    border: none !important;
+    flex: 0 0 auto;
+    text-align: center;       /* biar img di tengah kalau lebih kecil */
+}
+
+#globalImagePreview img {
+    max-width: 100%;
+    height: auto;             /* jaga rasio 16:9 */
+    object-fit: contain;      /* TIDAK meng-crop */
+    display: inline-block;
+}
+
+
+    /* Kalender langsung setelah gambar, tanpa gap */
+    #calendarContainer {
+        display: grid !important;
+        grid-template-columns: repeat(4, 1fr) !important;
+        gap: 3px !important;
+        width: 100%;
+        height: auto !important;
+        margin-top: 0 !important;
+    }
+
+    .month-card {
+        border: 1px solid #ddd;
+        border-radius: 3px;
+        box-shadow: none !important;
+        break-inside: avoid;
+        padding: 0;
+    }
+
+    .day-cell {
+        height: 37px;
+        padding: 0;
+    }
+    .day-cell span.date-number {
+        font-size: 0.78rem;
+    }
+    .day-detail {
+        font-size: 0.42rem !important;
+    }
+    .day-label {
+        font-size: 0.6rem;
+    }
+    .header-bg h3 {
+        font-size: 0.9rem;
+    }
+}
+
+    </style>
+</head>
+<body class="p-4 md:p-8">
+    <div class="max-w-7xl mx-auto print-container">
+
+        <header class="text-center mb-8 p-4 header-bg rounded-xl shadow-lg text-white no-print">
+            <h1 class="text-3xl font-extrabold mb-1">Pembuat Kalender Kustom A3 2026 🇮🇩</h1>
+            <p class="text-indigo-200">Pilih format, atur gambar latar, dan cetak kalender Anda.</p>
+        </header>
+
+        <!-- Kontrol -->
+        <div class="bg-white p-6 rounded-xl shadow-lg mb-8 flex flex-col md:flex-row gap-4 items-center justify-between no-print">
+            <div class="flex flex-col sm:flex-row gap-4">
+                <div class="flex items-center space-x-3">
+                    <label for="viewMode" class="font-semibold text-gray-700">Tampilan:</label>
+                    <select id="viewMode" class="p-2 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500 transition duration-150" onchange="renderCalendar()">
+                        <option value="12-in-1">12 Bulan (1 Halaman - A3)</option>
+                        <option value="1-per-month">1 Bulan per Halaman</option>
+                    </select>
+                </div>
+            </div>
+            <button onclick="printCalendar()" class="bg-green-500 hover:bg-green-600 text-white font-bold py-2 px-4 rounded-lg shadow-md transition duration-300 transform hover:scale-105 w-full md:w-auto">
+                Cetak Kalender (Print)
+            </button>
+        </div>
+
+        <!-- Upload gambar tahun -->
+        <div id="globalImageUploader" class="bg-white p-6 rounded-xl shadow-lg mb-4 no-print">
+            <label class="font-semibold text-gray-700 block mb-2">Unggah Gambar Tahun (Latar Belakang Utama)</label>
+            <input type="file" accept="image/*" id="globalImageUpload"
+                   class="block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100"
+                   onchange="handleGlobalImageUpload(event)">
+            <button onclick="removeGlobalImage()" class="text-xs text-red-500 hover:text-red-700 mt-2">Hapus Gambar Tahun</button>
+        </div>
+
+        <!-- Preview gambar -->
+        <div id="globalImagePreview" class="mt-0 mb-4 border border-gray-300 rounded-lg overflow-hidden hidden">
+            <span class="text-gray-500 text-sm p-4">Gambar tahunan akan muncul di sini saat dicetak dalam mode 12 Bulan.</span>
+        </div>
+
+        <!-- Kalender -->
+        <div id="calendarContainer" class="calendar-grid-web">
+            <!-- Render via JS -->
+        </div>
+
+        <!-- Legenda -->
+        <div class="legend-section mt-10 p-6 bg-gray-100 rounded-xl shadow-inner no-print">
+            <h2 class="text-xl font-bold text-gray-800 mb-4">Legenda Warna Hari Libur</h2>
+            <div class="mt-4 flex flex-wrap items-center space-x-4">
+                <span class="inline-block w-4 h-4 bg-red-500 rounded-full"></span><span class="font-semibold text-red-700">Hari Libur Nasional / Minggu</span>
+                <span class="inline-block w-4 h-4 bg-yellow-500 rounded-full"></span><span class="font-semibold text-yellow-700">Cuti Bersama</span>
+                <span class="inline-block w-4 h-4 bg-emerald-500 rounded-full"></span><span class="font-semibold text-emerald-700">Sabtu (Akhir Pekan)</span>
+            </div>
+        </div>
+
+    </div>
+
+    <script>
+        function printCalendar() {
+            window.print();
+        }
+
+        const HOLIDAYS = [
+            { date: '2026-01-01', name: 'Tahun Baru', type: 'holiday' },
+            { date: '2026-01-16', name: 'Isra Mikraj', type: 'holiday' },
+            { date: '2026-02-17', name: 'Imlek', type: 'holiday' },
+            { date: '2026-03-19', name: 'Nyepi', type: 'holiday' },
+            { date: '2026-03-21', name: 'Idul Fitri I', type: 'holiday' },
+            { date: '2026-03-22', name: 'Idul Fitri II', type: 'holiday' },
+            { date: '2026-04-03', name: 'Wafat Yesus', type: 'holiday' },
+            { date: '2026-04-05', name: 'Paskah', type: 'holiday' },
+            { date: '2026-05-01', name: 'Hari Buruh', type: 'holiday' },
+            { date: '2026-05-14', name: 'Kenaikan Yesus', type: 'holiday' },
+            { date: '2026-05-27', name: 'Idul Adha', type: 'holiday' },
+            { date: '2026-05-31', name: 'Hari Waisak', type: 'holiday' },
+            { date: '2026-06-01', name: 'Lahir Pancasila', type: 'holiday' },
+            { date: '2026-06-16', name: 'Tahun Baru Islam', type: 'holiday' },
+            { date: '2026-08-17', name: 'HUT RI', type: 'holiday' },
+            { date: '2026-08-25', name: 'Maulid Nabi', type: 'holiday' },
+            { date: '2026-12-25', name: 'Hari Natal', type: 'holiday' },
+
+            { date: '2026-02-16', name: 'CB Imlek', type: 'cuti' },
+            { date: '2026-03-18', name: 'CB Nyepi', type: 'cuti' },
+            { date: '2026-03-20', name: 'CB Idul Fitri', type: 'cuti' },
+            { date: '2026-03-23', name: 'CB Idul Fitri', type: 'cuti' },
+            { date: '2026-03-24', name: 'CB Idul Fitri', type: 'cuti' },
+            { date: '2026-05-15', name: 'CB Kenaikan', type: 'cuti' },
+            { date: '2026-05-28', name: 'CB Idul Adha', type: 'cuti' },
+            { date: '2026-12-24', name: 'CB Natal', type: 'cuti' },
+        ];
+
+        const monthNames = ["Januari", "Februari", "Maret", "April", "Mei", "Juni", "Juli", "Agustus", "September", "Oktober", "November", "Desember"];
+        const dayNames = ["Min", "Sen", "Sel", "Rab", "Kam", "Jum", "Sab"];
+
+        const holidayMap = new Map(HOLIDAYS.map(h => [h.date, h]));
+
+        let globalImageURL = localStorage.getItem('globalCalendarImage') || null;
+
+        function handleGlobalImageUpload(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+
+            const reader = new FileReader();
+            reader.onload = (e) => {
+                globalImageURL = e.target.result;
+                localStorage.setItem('globalCalendarImage', globalImageURL);
+                displayGlobalImage(globalImageURL);
+            };
+            reader.readAsDataURL(file);
+        }
+
+        function displayGlobalImage(url) {
+            const previewEl = document.getElementById('globalImagePreview');
+            previewEl.classList.remove('hidden');
+            previewEl.innerHTML = url
+                ? `<img src="${url}" alt="Gambar Tahun Kustom">`
+                : `<span class="text-gray-500 text-sm p-4">Pratinjau Gambar Tahun</span>`;
+        }
+
+        function removeGlobalImage() {
+            globalImageURL = null;
+            localStorage.removeItem('globalCalendarImage');
+            document.getElementById('globalImageUpload').value = '';
+            const previewEl = document.getElementById('globalImagePreview');
+            previewEl.innerHTML = `<span class="text-gray-500 text-sm p-4">Pratinjau Gambar Tahun</span>`;
+        }
+
+        function renderMonth(monthIndex, year) {
+            const firstDayOfMonth = new Date(year, monthIndex, 1);
+            const lastDayOfMonth = new Date(year, monthIndex + 1, 0);
+            const totalDays = lastDayOfMonth.getDate();
+            const startDayOfWeek = firstDayOfMonth.getDay();
+
+            const monthName = monthNames[monthIndex];
+            let monthHtml = `
+                <div class="month-card">
+                    <div class="calendar-content">
+                        <div class="header-bg text-white p-2 text-center">
+                            <h3 class="text-lg font-bold">${monthName} ${year}</h3>
+                        </div>
+                        <div class="grid grid-cols-7 border-b border-gray-200">
+                            ${dayNames.map((day, index) => {
+                                let dayClass = 'day-label';
+                                if (index === 0) dayClass += ' text-red-500';
+                                else if (index === 6) dayClass += ' text-emerald-500';
+                                return `<div class="${dayClass}">${day}</div>`;
+                            }).join('')}
+                        </div>
+                        <div class="grid grid-cols-7 p-1">
+                            ${Array(startDayOfWeek).fill().map(() => `<div class="day-cell"></div>`).join('')}
+            `;
+
+            for (let day = 1; day <= totalDays; day++) {
+                const currentDate = new Date(year, monthIndex, day);
+                const dateString = `${year}-${String(monthIndex + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
+                const dayOfWeek = currentDate.getDay();
+                const holidayInfo = holidayMap.get(dateString);
+
+                let cellClass = 'day-cell';
+                if (dayOfWeek === 0) cellClass += ' sun-day';
+                else if (dayOfWeek === 6) cellClass += ' sat-day';
+
+                let holidayDetailHtml = '';
+                if (holidayInfo) {
+                    const detailClass = holidayInfo.type === 'holiday' ? 'text-red-600' : 'text-yellow-600';
+                    holidayDetailHtml = `<div class="day-detail font-medium ${detailClass} break-words">${holidayInfo.name}</div>`;
+                    if (holidayInfo.type === 'holiday') cellClass = 'day-cell holiday-day';
+                    else if (holidayInfo.type === 'cuti') cellClass = 'day-cell cuti-bersama-day';
+                }
+
+                monthHtml += `
+                    <div class="${cellClass}">
+                        <span class="date-number">${day}</span>
+                        ${holidayDetailHtml}
+                    </div>
+                `;
+            }
+
+            monthHtml += `
+                        </div>
+                    </div>
+                </div>
+            `;
+            return monthHtml;
+        }
+
+        function renderCalendar() {
+            const container = document.getElementById('calendarContainer');
+            const globalImagePreview = document.getElementById('globalImagePreview');
+            const globalImageUploader = document.getElementById('globalImageUploader');
+
+            const viewMode = document.getElementById('viewMode').value;
+            const currentYear = 2026;
+
+            container.innerHTML = '';
+
+            if (viewMode === '12-in-1') {
+                container.classList.remove('calendar-grid-web');
+                container.classList.add('calendar-grid-4x3');
+                globalImagePreview.classList.remove('hidden');
+                globalImageUploader.classList.remove('hidden');
+            } else {
+                container.classList.add('calendar-grid-web');
+                container.classList.remove('calendar-grid-4x3');
+                globalImagePreview.classList.add('hidden');
+                globalImageUploader.classList.add('hidden');
+            }
+
+            for (let i = 0; i < 12; i++) {
+                container.innerHTML += renderMonth(i, currentYear);
+            }
+
+            if (viewMode === '12-in-1') {
+                displayGlobalImage(globalImageURL);
+            }
+        }
+
+        document.addEventListener('DOMContentLoaded', () => {
+            renderCalendar();
+            if (globalImageURL) displayGlobalImage(globalImageURL);
+        });
+    </script>
+</body>
+</html>
